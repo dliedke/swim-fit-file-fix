@@ -10,6 +10,8 @@
   --accent-soft: #e3f1fa;
   --changed: #fff4d6;
   --changed-border: #e6b84a;
+  --warn-bg: #fff4d6;
+  --warn-border: #e6b84a;
   --danger: #c0392b;
   --danger-soft: #fdecea;
   --ok: #1e7f4f;
@@ -35,8 +37,10 @@
     --accent: #3fa9e6;
     --accent-strong: #6cc0f0;
     --accent-soft: #15344a;
-    --changed: #3a3015;
-    --changed-border: #b38b2c;
+    --changed: rgb(63 169 230 / .10);
+    --changed-border: #3fa9e6;
+    --warn-bg: rgb(250 190 60 / .08);
+    --warn-border: #d4a23c;
     --danger: #ff7b6b;
     --danger-soft: #3b1d1a;
     --ok: #5fd39a;
@@ -59,8 +63,10 @@
   --accent: #3fa9e6;
   --accent-strong: #6cc0f0;
   --accent-soft: #15344a;
-  --changed: #3a3015;
-  --changed-border: #b38b2c;
+  --changed: rgb(63 169 230 / .10);
+  --changed-border: #3fa9e6;
+  --warn-bg: rgb(250 190 60 / .08);
+  --warn-border: #d4a23c;
   --danger: #ff7b6b;
   --danger-soft: #3b1d1a;
   --ok: #5fd39a;
@@ -109,7 +115,7 @@ h1 { margin: 0 0 6px; font-size: 1.6rem; letter-spacing: -0.01em; }
 
 .alert { border-radius: var(--radius); padding: 12px 14px; margin: 16px 0; }
 .alert.error { background: var(--danger-soft); color: var(--danger); }
-.alert.warn { background: var(--changed); border: 1px solid var(--changed-border); }
+.alert.warn { background: var(--warn-bg); border: 1px solid var(--warn-border); }
 .alert.ok { background: var(--ok-soft); color: var(--ok); }
 
 .filebar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 20px 0 12px; flex-wrap: wrap; }
@@ -135,6 +141,7 @@ table.laps { width: 100%; border-collapse: collapse; font-variant-numeric: tabul
 .laps tbody tr.rest td { color: var(--rest); }
 .laps tbody tr.rest .stroke { font-style: italic; }
 .laps tbody tr.changed td { background: var(--changed); }
+.laps tbody tr.changed td:first-child { box-shadow: inset 3px 0 0 var(--changed-border); }
 .laps tfoot td { font-weight: 600; background: var(--surface-2); border-bottom: 0; }
 .laps tr.lengths td { background: var(--surface-2); padding: 6px 10px 10px 3.2em; white-space: normal; }
 
