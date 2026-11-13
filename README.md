@@ -12,7 +12,8 @@ App web para corrigir **tempo** e **distância** das séries de um treino de nat
 (Garmin e outros relógios) e exportar o arquivo corrigido para reenviar ao Garmin Connect, Strava etc.
 
 Tudo roda no navegador: o arquivo **não é enviado** para nenhum servidor. A interface aparece em português ou
-inglês conforme o idioma do navegador (dá para trocar no canto superior direito).
+inglês conforme o idioma do navegador, e o tema claro/escuro segue o sistema — os dois podem ser trocados no canto
+superior direito.
 
 ### Como usar
 
@@ -54,7 +55,8 @@ Web app to fix the **time** and **distance** of the sets in a swim workout recor
 (Garmin and other watches) and export the corrected file to re-upload to Garmin Connect, Strava, etc.
 
 Everything runs in your browser: the file is **never uploaded** to any server. The interface is shown in English
-or Portuguese according to your browser language (you can switch it in the top-right corner).
+or Portuguese according to your browser language, and the light/dark theme follows your system — both can be
+changed in the top-right corner.
 
 ### How to use
 
