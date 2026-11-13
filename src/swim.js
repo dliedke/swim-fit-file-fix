@@ -146,7 +146,7 @@ export function analyze(bytes) {
   const parsed = parseFit(bytes);
   const file = activityFile(parsed);
   const c = collect(file);
-  if (!c.laps.length) throw new FitError('O arquivo não contém séries (voltas). É um arquivo de atividade?');
+  if (!c.laps.length) throw new FitError('O arquivo não contém séries (voltas). É um arquivo de atividade?', 'no_laps');
   const session = c.sessions[0] || null;
   const sport = session ? get(session, 5) : null;
   const subSport = session ? get(session, 6) : null;

@@ -44,7 +44,13 @@ export const BASE_TYPES = {
   0x90: { name: 'uint64z', size: 8, invalid: null },
 };
 
-export class FitError extends Error {}
+export class FitError extends Error {
+  constructor(message, code = 'corrupt') {
+    super(message);
+    this.name = 'FitError';
+    this.code = code;
+  }
+}
 
 /**
  * Lê um arquivo FIT (ArrayBuffer/Uint8Array). Suporta arquivos encadeados.
@@ -66,17 +72,17 @@ export function parseFit(input) {
     files.push(file);
     pos = next;
   }
-  if (!files.length) throw new FitError('Arquivo vazio ou não é um arquivo FIT.');
+  if (!files.length) throw new FitError('Arquivo vazio ou não é um arquivo FIT.', 'not_fit');
   return { files };
 }
 
 function parseOne(bytes, start) {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const headerSize = bytes[start];
-  if (headerSize !== 12 && headerSize !== 14) throw new FitError('Cabeçalho FIT inválido.');
-  if (start + headerSize > bytes.length) throw new FitError('Arquivo FIT truncado.');
+  if (headerSize !== 12 && headerSize !== 14) throw new FitError('Cabeçalho FIT inválido.', 'not_fit');
+  if (start + headerSize > bytes.length) throw new FitError('Arquivo FIT truncado.', 'truncated');
   const sig = String.fromCharCode(...bytes.subarray(start + 8, start + 12));
-  if (sig !== '.FIT') throw new FitError('Este arquivo não parece ser um arquivo .FIT.');
+  if (sig !== '.FIT') throw new FitError('Este arquivo não parece ser um arquivo .FIT.', 'not_fit');
   const header = {
     size: headerSize,
     protocolVersion: bytes[start + 1],
@@ -85,7 +91,7 @@ function parseOne(bytes, start) {
   };
   const dataStart = start + headerSize;
   const dataEnd = dataStart + header.dataSize;
-  if (dataEnd + 2 > bytes.length) throw new FitError('Arquivo FIT truncado (tamanho declarado maior que o arquivo).');
+  if (dataEnd + 2 > bytes.length) throw new FitError('Arquivo FIT truncado (tamanho declarado maior que o arquivo).', 'truncated');
 
   const fileCrc = view.getUint16(dataEnd, true);
   const calcCrc = crc16(bytes, start, dataEnd);

@@ -1,6 +1,12 @@
 // Extração mínima de ZIP (para o "Exportar original" do Garmin Connect, que
 // entrega o .fit dentro de um .zip). Usa DecompressionStream nativo.
 
+function zipError(message, code) {
+  const err = new Error(message);
+  err.code = code;
+  return err;
+}
+
 export function isZip(bytes) {
   return bytes.length > 4 && bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04;
 }
@@ -13,7 +19,7 @@ export async function extractFitFromZip(bytes) {
   for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65557); i--) {
     if (view.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
   }
-  if (eocd < 0) throw new Error('Arquivo .zip inválido.');
+  if (eocd < 0) throw zipError('Arquivo .zip inválido.', 'zip_invalid');
   const count = view.getUint16(eocd + 10, true);
   let p = view.getUint32(eocd + 16, true);
   const decoder = new TextDecoder();
@@ -38,7 +44,7 @@ export async function extractFitFromZip(bytes) {
       const out = new Uint8Array(await new Response(stream).arrayBuffer());
       return { name: name.split('/').pop(), bytes: out };
     }
-    throw new Error('Compressão do .zip não suportada. Extraia o arquivo .fit e envie-o diretamente.');
+    throw zipError('Compressão do .zip não suportada. Extraia o arquivo .fit e envie-o diretamente.', 'zip_method');
   }
-  throw new Error('Nenhum arquivo .fit encontrado dentro do .zip.');
+  throw zipError('Nenhum arquivo .fit encontrado dentro do .zip.', 'zip_no_fit');
 }

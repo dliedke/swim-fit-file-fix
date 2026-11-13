@@ -158,3 +158,27 @@ table.laps { width: 100%; border-collapse: collapse; font-variant-numeric: tabul
   .laps .c-idx { width: 1.6em; }
   h1 { font-size: 1.35rem; }
 }
+
+a { color: var(--accent); }
+
+.title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.lang { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+.lang button {
+  font: inherit; font-size: .8rem; font-weight: 600; padding: 4px 10px; border: 0; cursor: pointer;
+  background: transparent; color: var(--muted);
+}
+.lang button + button { border-left: 1px solid var(--border); }
+.lang button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+
+.upload { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; margin: 0 0 16px; }
+.upload p { margin: 0 0 10px; }
+.upload-links { display: flex; gap: 10px; flex-wrap: wrap; }
+.upload-links .btn { text-decoration: none; display: inline-block; color: #fff; }
+.btn.garmin { background: #1d2733; }
+.btn.garmin:hover { background: #000; }
+.btn.strava { background: #fc4c02; }
+.btn.strava:hover { background: #d94000; }
+@media (prefers-color-scheme: dark) {
+  .btn.garmin { background: #3a4757; }
+  .btn.garmin:hover { background: #4a596b; }
+}

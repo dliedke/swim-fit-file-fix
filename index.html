@@ -11,18 +11,24 @@
 <body>
   <header class="top">
     <div class="wrap">
-      <h1>Corrigir natação <span class="tag">.FIT</span></h1>
-      <p class="lead">Ajuste o tempo e a distância das séries do seu treino de natação e baixe o arquivo corrigido.
+      <div class="title-row">
+        <h1><span data-i18n="heading">Corrigir natação</span> <span class="tag">.FIT</span></h1>
+        <div class="lang" role="group" aria-label="Idioma / Language">
+          <button type="button" data-lang="pt" lang="pt-BR">PT</button>
+          <button type="button" data-lang="en" lang="en">EN</button>
+        </div>
+      </div>
+      <p class="lead" data-i18n="lead">Ajuste o tempo e a distância das séries do seu treino de natação e baixe o arquivo corrigido.
         O arquivo é processado só no seu navegador — nada é enviado para servidor nenhum.</p>
     </div>
   </header>
 
   <main class="wrap">
-    <section id="drop" class="drop" tabindex="0" role="button" aria-label="Escolher arquivo FIT">
-      <input id="file" type="file" accept=".fit,.FIT" hidden>
+    <section id="drop" class="drop" tabindex="0" role="button" data-i18n-aria="dropAria" aria-label="Escolher arquivo FIT">
+      <input id="file" type="file" accept=".fit,.FIT,.zip" hidden>
       <svg aria-hidden="true" viewBox="0 0 24 24" width="40" height="40"><path d="M12 3v12m0-12 4 4m-4-4-4 4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <p><strong>Arraste o arquivo .FIT aqui</strong> ou clique para escolher</p>
-      <p class="muted small">Garmin Connect: atividade → ⚙️ → “Exportar original” (vem em .zip; extraia o .fit — ou solte o .zip aqui mesmo)</p>
+      <p data-i18n-html="dropMain"><strong>Arraste o arquivo .FIT aqui</strong> ou clique para escolher</p>
+      <p class="muted small" data-i18n="dropHint">Garmin Connect: atividade → ⚙️ → “Exportar original” (vem em .zip; pode soltar o .zip aqui mesmo)</p>
     </section>
 
     <div id="error" class="alert error" hidden></div>
@@ -33,7 +39,7 @@
           <div class="filename" id="filename"></div>
           <div class="muted small" id="fileinfo"></div>
         </div>
-        <button class="btn ghost" id="another" type="button">Abrir outro arquivo</button>
+        <button class="btn ghost" id="another" type="button" data-i18n="openAnother">Abrir outro arquivo</button>
       </div>
 
       <div id="warnings"></div>
@@ -43,8 +49,7 @@
       <div class="options">
         <label class="check">
           <input type="checkbox" id="compensate" checked>
-          <span>Ao mudar o tempo de uma série, <strong>compensar no descanso seguinte</strong>
-            <span class="muted">(o restante do treino mantém o horário; desmarque para empurrar tudo que vem depois)</span></span>
+          <span data-i18n-html="compensate"></span>
         </label>
       </div>
 
@@ -53,13 +58,13 @@
           <thead>
             <tr>
               <th class="c-idx">#</th>
-              <th>Série</th>
-              <th class="num">Distância</th>
-              <th class="num hide-sm">Piscinas</th>
-              <th class="num">Tempo</th>
-              <th class="num">Ritmo <span id="paceUnit">/100m</span></th>
-              <th class="num hide-sm">Braçadas</th>
-              <th class="num hide-sm">SWOLF</th>
+              <th data-i18n="colSet">Série</th>
+              <th class="num" data-i18n="colDistance">Distância</th>
+              <th class="num hide-sm" data-i18n="colLengths">Piscinas</th>
+              <th class="num" data-i18n="colTime">Tempo</th>
+              <th class="num"><span data-i18n="colPace">Ritmo</span> <span id="paceUnit">/100m</span></th>
+              <th class="num hide-sm" data-i18n="colStrokes">Braçadas</th>
+              <th class="num hide-sm" data-i18n="colSwolf">SWOLF</th>
               <th></th>
             </tr>
           </thead>
@@ -69,30 +74,26 @@
       </div>
 
       <div class="actions">
-        <button class="btn ghost" id="reset" type="button" disabled>Desfazer tudo</button>
-        <button class="btn primary" id="export" type="button">Baixar FIT corrigido</button>
+        <button class="btn ghost" id="reset" type="button" disabled data-i18n="resetAll">Desfazer tudo</button>
+        <button class="btn primary" id="export" type="button" data-i18n="download">Baixar FIT corrigido</button>
       </div>
       <div id="result" class="alert ok" hidden></div>
+      <div id="upload" class="upload" hidden>
+        <p data-i18n="uploadHint">Apague a atividade original e envie o arquivo corrigido:</p>
+        <div class="upload-links">
+          <a class="btn garmin" id="uploadGarmin" target="_blank" rel="noopener" data-i18n="uploadGarmin">Enviar ao Garmin Connect</a>
+          <a class="btn strava" id="uploadStrava" target="_blank" rel="noopener" data-i18n="uploadStrava">Enviar ao Strava</a>
+        </div>
+      </div>
 
       <details class="help">
-        <summary>Como funciona e como reenviar</summary>
-        <ul>
-          <li><strong>Distância:</strong> é ajustada em múltiplos do tamanho da piscina. Se uma piscina do relógio está claramente longa demais
-            (virada não detectada), ela é dividida ao meio; se está curta demais (virada a mais), é unida à vizinha.
-            Fora isso, o tempo e as braçadas da série são distribuídos igualmente entre as piscinas.</li>
-          <li><strong>Tempo:</strong> as piscinas e a frequência cardíaca da série são esticadas/encolhidas proporcionalmente.
-            Com a compensação ligada, o descanso seguinte absorve a diferença.</li>
-          <li>São recalculados: distância e tempo totais, ritmo/velocidade média e máxima, número de piscinas, cadência, SWOLF
-            e braçadas por piscina (série e treino). Todo o resto do arquivo (FC, calorias, dados do relógio) é preservado.</li>
-          <li><strong>Garmin Connect:</strong> apague a atividade original e depois importe o arquivo corrigido
-            (Connect web → ícone de upload → “Importar dados”). Se a original não for apagada, ele recusa por ser duplicada.</li>
-          <li><strong>Strava:</strong> apague a atividade original e envie o arquivo em strava.com/upload/select.</li>
-        </ul>
+        <summary data-i18n="helpTitle">Como funciona e como reenviar</summary>
+        <ul id="helpList"></ul>
       </details>
     </section>
   </main>
 
-  <footer class="wrap muted small foot">Feito para corrigir os erros de contagem do relógio na piscina. Código aberto.</footer>
+  <footer class="wrap muted small foot" data-i18n-html="footer"></footer>
 
   <script type="module" src="src/app.js"></script>
 </body>
