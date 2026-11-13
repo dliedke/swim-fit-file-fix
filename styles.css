@@ -15,12 +15,17 @@
   --ok: #1e7f4f;
   --ok-soft: #e5f5ec;
   --rest: #8a96a5;
+  --garmin: #1d2733;
+  --garmin-hover: #000;
+  --seg-active: #ffffff;
   --radius: 10px;
   color-scheme: light;
 }
 
+/* Tema escuro: segue o sistema, a menos que o usuário escolha claro;
+   ou forçado quando o usuário escolhe escuro. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #0f141a;
     --surface: #171e26;
     --surface-2: #1e2731;
@@ -37,8 +42,34 @@
     --ok: #5fd39a;
     --ok-soft: #173326;
     --rest: #6f7c8b;
+    --garmin: #3a4757;
+    --garmin-hover: #4a596b;
+    --seg-active: #3a4757;
     color-scheme: dark;
   }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f141a;
+  --surface: #171e26;
+  --surface-2: #1e2731;
+  --text: #e6ebf1;
+  --muted: #93a1b1;
+  --border: #2a3542;
+  --accent: #3fa9e6;
+  --accent-strong: #6cc0f0;
+  --accent-soft: #15344a;
+  --changed: #3a3015;
+  --changed-border: #b38b2c;
+  --danger: #ff7b6b;
+  --danger-soft: #3b1d1a;
+  --ok: #5fd39a;
+  --ok-soft: #173326;
+  --rest: #6f7c8b;
+  --garmin: #3a4757;
+  --garmin-hover: #4a596b;
+  --seg-active: #3a4757;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -161,7 +192,19 @@ table.laps { width: 100%; border-collapse: collapse; font-variant-numeric: tabul
 
 a { color: var(--accent); }
 
-.title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px 12px; flex-wrap: wrap; }
+.controls { display: flex; gap: 8px; align-items: center; flex-shrink: 0; margin-bottom: 8px; }
+
+.theme { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--border); border-radius: 99px; background: var(--surface-2); }
+.theme button {
+  display: grid; place-items: center; width: 30px; height: 26px; padding: 0; border: 0; border-radius: 99px;
+  background: transparent; color: var(--muted); cursor: pointer;
+}
+.theme button:hover { color: var(--text); }
+.theme button[aria-pressed="true"] { background: var(--seg-active); color: var(--text); box-shadow: 0 1px 2px rgb(0 0 0 / .18); }
+.theme button:focus-visible, .lang button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.theme svg { width: 16px; height: 16px; }
+
 .lang { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; flex-shrink: 0; }
 .lang button {
   font: inherit; font-size: .8rem; font-weight: 600; padding: 4px 10px; border: 0; cursor: pointer;
@@ -174,11 +217,7 @@ a { color: var(--accent); }
 .upload p { margin: 0 0 10px; }
 .upload-links { display: flex; gap: 10px; flex-wrap: wrap; }
 .upload-links .btn { text-decoration: none; display: inline-block; color: #fff; }
-.btn.garmin { background: #1d2733; }
-.btn.garmin:hover { background: #000; }
+.btn.garmin { background: var(--garmin); }
+.btn.garmin:hover { background: var(--garmin-hover); }
 .btn.strava { background: #fc4c02; }
 .btn.strava:hover { background: #d94000; }
-@media (prefers-color-scheme: dark) {
-  .btn.garmin { background: #3a4757; }
-  .btn.garmin:hover { background: #4a596b; }
-}

@@ -29,6 +29,7 @@ function applyLanguage() {
   for (const el of document.querySelectorAll('[data-i18n]')) el.textContent = T[el.dataset.i18n];
   for (const el of document.querySelectorAll('[data-i18n-html]')) el.innerHTML = T[el.dataset.i18nHtml];
   for (const el of document.querySelectorAll('[data-i18n-aria]')) el.setAttribute('aria-label', T[el.dataset.i18nAria]);
+  for (const el of document.querySelectorAll('[data-theme-choice][data-i18n-aria]')) el.title = T[el.dataset.i18nAria];
   els.helpList.innerHTML = T.help.map((h) => `<li>${h}</li>`).join('');
   for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
 }
@@ -43,6 +44,32 @@ for (const b of document.querySelectorAll('[data-lang]')) {
   });
 }
 applyLanguage();
+
+// ---------------------------------------------------------------- tema
+
+const THEME_KEY = 'swim-fit-theme';
+
+function currentTheme() {
+  const t = document.documentElement.dataset.theme;
+  return t === 'light' || t === 'dark' ? t : 'system';
+}
+
+function setTheme(choice) {
+  if (choice === 'system') delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = choice;
+  try {
+    if (choice === 'system') localStorage.removeItem(THEME_KEY);
+    else localStorage.setItem(THEME_KEY, choice);
+  } catch { /* sem armazenamento: vale só nesta visita */ }
+  for (const b of document.querySelectorAll('[data-theme-choice]')) {
+    b.setAttribute('aria-pressed', String(b.dataset.themeChoice === choice));
+  }
+}
+
+for (const b of document.querySelectorAll('[data-theme-choice]')) {
+  b.addEventListener('click', () => setTheme(b.dataset.themeChoice));
+}
+setTheme(currentTheme());
 
 let doc = null; // { name, bytes, model, state: [{ timer, distance }], rows: [] }
 
