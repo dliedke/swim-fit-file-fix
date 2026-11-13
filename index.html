@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Corrigir Natação FIT</title>
+  <meta name="description" content="Corrija o tempo e a distância das séries de um treino de natação (.FIT) e exporte o arquivo corrigido. Tudo roda no navegador.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M2 22c3 0 3-2 6-2s3 2 6 2 3-2 6-2 3 2 6 2 3-2 4-2' fill='none' stroke='%230a84c6' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='20' cy='9' r='4' fill='%230a84c6'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <h1>Corrigir natação <span class="tag">.FIT</span></h1>
+      <p class="lead">Ajuste o tempo e a distância das séries do seu treino de natação e baixe o arquivo corrigido.
+        O arquivo é processado só no seu navegador — nada é enviado para servidor nenhum.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="drop" class="drop" tabindex="0" role="button" aria-label="Escolher arquivo FIT">
+      <input id="file" type="file" accept=".fit,.FIT" hidden>
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="40" height="40"><path d="M12 3v12m0-12 4 4m-4-4-4 4M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <p><strong>Arraste o arquivo .FIT aqui</strong> ou clique para escolher</p>
+      <p class="muted small">Garmin Connect: atividade → ⚙️ → “Exportar original” (vem em .zip; extraia o .fit — ou solte o .zip aqui mesmo)</p>
+    </section>
+
+    <div id="error" class="alert error" hidden></div>
+
+    <section id="editor" hidden>
+      <div class="filebar">
+        <div>
+          <div class="filename" id="filename"></div>
+          <div class="muted small" id="fileinfo"></div>
+        </div>
+        <button class="btn ghost" id="another" type="button">Abrir outro arquivo</button>
+      </div>
+
+      <div id="warnings"></div>
+
+      <div class="cards" id="summary"></div>
+
+      <div class="options">
+        <label class="check">
+          <input type="checkbox" id="compensate" checked>
+          <span>Ao mudar o tempo de uma série, <strong>compensar no descanso seguinte</strong>
+            <span class="muted">(o restante do treino mantém o horário; desmarque para empurrar tudo que vem depois)</span></span>
+        </label>
+      </div>
+
+      <div class="table-wrap">
+        <table class="laps">
+          <thead>
+            <tr>
+              <th class="c-idx">#</th>
+              <th>Série</th>
+              <th class="num">Distância</th>
+              <th class="num hide-sm">Piscinas</th>
+              <th class="num">Tempo</th>
+              <th class="num">Ritmo <span id="paceUnit">/100m</span></th>
+              <th class="num hide-sm">Braçadas</th>
+              <th class="num hide-sm">SWOLF</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="laps"></tbody>
+          <tfoot id="totals"></tfoot>
+        </table>
+      </div>
+
+      <div class="actions">
+        <button class="btn ghost" id="reset" type="button" disabled>Desfazer tudo</button>
+        <button class="btn primary" id="export" type="button">Baixar FIT corrigido</button>
+      </div>
+      <div id="result" class="alert ok" hidden></div>
+
+      <details class="help">
+        <summary>Como funciona e como reenviar</summary>
+        <ul>
+          <li><strong>Distância:</strong> é ajustada em múltiplos do tamanho da piscina. Se uma piscina do relógio está claramente longa demais
+            (virada não detectada), ela é dividida ao meio; se está curta demais (virada a mais), é unida à vizinha.
+            Fora isso, o tempo e as braçadas da série são distribuídos igualmente entre as piscinas.</li>
+          <li><strong>Tempo:</strong> as piscinas e a frequência cardíaca da série são esticadas/encolhidas proporcionalmente.
+            Com a compensação ligada, o descanso seguinte absorve a diferença.</li>
+          <li>São recalculados: distância e tempo totais, ritmo/velocidade média e máxima, número de piscinas, cadência, SWOLF
+            e braçadas por piscina (série e treino). Todo o resto do arquivo (FC, calorias, dados do relógio) é preservado.</li>
+          <li><strong>Garmin Connect:</strong> apague a atividade original e depois importe o arquivo corrigido
+            (Connect web → ícone de upload → “Importar dados”). Se a original não for apagada, ele recusa por ser duplicada.</li>
+          <li><strong>Strava:</strong> apague a atividade original e envie o arquivo em strava.com/upload/select.</li>
+        </ul>
+      </details>
+    </section>
+  </main>
+
+  <footer class="wrap muted small foot">Feito para corrigir os erros de contagem do relógio na piscina. Código aberto.</footer>
+
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>

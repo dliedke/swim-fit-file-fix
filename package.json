@@ -1,0 +1,15 @@
+{
+  "name": "swim-fit-file-fix",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Web app para corrigir tempo e distância das séries de arquivos FIT de natação",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "start": "npx --yes http-server@14.1.1 -c-1 -p 8080 ."
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@garmin/fitsdk": "^21.214.0"
+  }
+}
