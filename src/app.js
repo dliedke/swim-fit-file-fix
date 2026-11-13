@@ -1,5 +1,6 @@
 import { analyze, applyEdits } from './swim.js';
 import { isZip, extractFitFromZip } from './zip.js';
+import { LANGS, LINKS, detectLang, saveLang, errorText } from './i18n.js';
 
 const FIT_EPOCH = 631065600; // 1989-12-31T00:00:00Z em segundos Unix
 const YARD = 0.9144;
@@ -11,7 +12,37 @@ const els = {
   filename: $('filename'), fileinfo: $('fileinfo'), warnings: $('warnings'),
   summary: $('summary'), compensate: $('compensate'), laps: $('laps'), totals: $('totals'),
   paceUnit: $('paceUnit'), reset: $('reset'), exportBtn: $('export'), result: $('result'), another: $('another'),
+  upload: $('upload'), uploadGarmin: $('uploadGarmin'), uploadStrava: $('uploadStrava'), helpList: $('helpList'),
 };
+els.uploadGarmin.href = LINKS.garmin;
+els.uploadStrava.href = LINKS.strava;
+
+let lang = detectLang();
+let T = LANGS[lang];
+
+/** Aplica os textos estáticos do idioma atual na página. */
+function applyLanguage() {
+  T = LANGS[lang];
+  document.documentElement.lang = T.locale;
+  document.title = T.title;
+  document.querySelector('meta[name="description"]')?.setAttribute('content', T.metaDescription);
+  for (const el of document.querySelectorAll('[data-i18n]')) el.textContent = T[el.dataset.i18n];
+  for (const el of document.querySelectorAll('[data-i18n-html]')) el.innerHTML = T[el.dataset.i18nHtml];
+  for (const el of document.querySelectorAll('[data-i18n-aria]')) el.setAttribute('aria-label', T[el.dataset.i18nAria]);
+  els.helpList.innerHTML = T.help.map((h) => `<li>${h}</li>`).join('');
+  for (const b of document.querySelectorAll('[data-lang]')) b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
+}
+
+for (const b of document.querySelectorAll('[data-lang]')) {
+  b.addEventListener('click', () => {
+    if (b.dataset.lang === lang) return;
+    lang = b.dataset.lang;
+    saveLang(lang);
+    applyLanguage();
+    if (doc) renderAll();
+  });
+}
+applyLanguage();
 
 let doc = null; // { name, bytes, model, state: [{ timer, distance }], rows: [] }
 
@@ -44,13 +75,13 @@ function parseTime(text) {
 const unitName = () => (doc.model.poolUnit === 1 ? 'yd' : 'm');
 const toDisp = (m) => (doc.model.poolUnit === 1 ? m / YARD : m);
 const fromDisp = (v) => (doc.model.poolUnit === 1 ? v * YARD : v);
-const fmtDist = (m) => `${Math.round(toDisp(m)).toLocaleString('pt-BR')} ${unitName()}`;
+const fmtDist = (m) => `${Math.round(toDisp(m)).toLocaleString(T.locale)} ${unitName()}`;
 const fmtPace = (timer, dist) => (dist > 0 && timer > 0 ? fmtTime((timer / toDisp(dist)) * 100, 0) : '—');
 
 function fmtDate(fitTs) {
   if (fitTs == null) return '';
   const d = new Date((fitTs + FIT_EPOCH) * 1000);
-  return d.toLocaleString('pt-BR', { dateStyle: 'full', timeStyle: 'short' });
+  return d.toLocaleString(T.locale, { dateStyle: 'full', timeStyle: 'short' });
 }
 
 // ---------------------------------------------------------------- arquivo
@@ -62,7 +93,7 @@ function showError(msg) {
 
 async function openFile(file) {
   showError('');
-  els.result.hidden = true;
+  hideResult();
   try {
     let bytes = new Uint8Array(await file.arrayBuffer());
     let name = file.name;
@@ -78,7 +109,7 @@ async function openFile(file) {
     renderAll();
   } catch (err) {
     console.error(err);
-    showError(`Não foi possível ler o arquivo: ${err.message}`);
+    showError(T.readError(errorText(T, err)));
   }
 }
 
@@ -120,14 +151,14 @@ function renderAll() {
   els.editor.hidden = false;
   els.drop.classList.add('compact');
   els.filename.textContent = doc.name;
-  const pool = m.poolLength ? ` · Piscina de ${Math.round(toDisp(m.poolLength))} ${unitName()}` : '';
+  const pool = m.poolLength ? ` · ${T.pool(Math.round(toDisp(m.poolLength)), unitName())}` : '';
   els.fileinfo.textContent = `${fmtDate(m.startTime)}${pool}`;
   els.paceUnit.textContent = `/100${unitName()}`;
 
   const warns = [];
-  if (!m.crcOk) warns.push('O arquivo original tem checksum inválido (pode estar corrompido). O arquivo exportado terá um checksum novo e válido.');
-  if (!m.isSwim) warns.push('Esta atividade não parece ser de natação. A edição funciona, mas os recálculos foram pensados para natação.');
-  else if (!m.isPool) warns.push('Natação em águas abertas: a distância é livre (sem piscinas) e a distância acumulada dos registros é ajustada proporcionalmente.');
+  if (!m.crcOk) warns.push(T.warnCrc);
+  if (!m.isSwim) warns.push(T.warnNotSwim);
+  else if (!m.isPool) warns.push(T.warnOpenWater);
   els.warnings.innerHTML = warns.map((w) => `<div class="alert warn">${w}</div>`).join('');
 
   els.laps.innerHTML = '';
@@ -150,7 +181,7 @@ function buildRow(lap, i) {
     return c;
   };
   td('c-idx').textContent = String(i + 1);
-  td('stroke').textContent = lap.strokeName;
+  td('stroke').textContent = lap.isRest ? T.rest : (T.strokes[lap.stroke] ?? '—');
 
   cells.dist = td('num');
   cells.len = td('num hide-sm');
@@ -164,7 +195,7 @@ function buildRow(lap, i) {
     dist.min = String(step);
     dist.step = String(step);
     dist.inputMode = 'decimal';
-    dist.setAttribute('aria-label', `Distância da série ${i + 1}`);
+    dist.setAttribute('aria-label', T.ariaDistance(i + 1));
     dist.addEventListener('change', () => onDistance(i, dist));
     cells.distInput = dist;
     cells.distOrig = document.createElement('span');
@@ -178,7 +209,7 @@ function buildRow(lap, i) {
       len.step = '1';
       len.inputMode = 'numeric';
       len.style.width = '4em';
-      len.setAttribute('aria-label', `Piscinas da série ${i + 1}`);
+      len.setAttribute('aria-label', T.ariaLengths(i + 1));
       len.addEventListener('change', () => onLengths(i, len));
       cells.lenInput = len;
       cells.len.append(len);
@@ -192,7 +223,7 @@ function buildRow(lap, i) {
   time.type = 'text';
   time.inputMode = 'decimal';
   time.autocomplete = 'off';
-  time.setAttribute('aria-label', `Tempo da série ${i + 1}`);
+  time.setAttribute('aria-label', T.ariaTime(i + 1));
   time.addEventListener('change', () => onTime(i, time));
   time.addEventListener('keydown', (e) => { if (e.key === 'Enter') time.blur(); });
   cells.timeInput = time;
@@ -208,7 +239,7 @@ function buildRow(lap, i) {
   const undo = document.createElement('button');
   undo.type = 'button';
   undo.className = 'icon-btn';
-  undo.title = 'Desfazer alterações desta série';
+  undo.title = T.undoLap;
   undo.textContent = '↺';
   undo.addEventListener('click', () => {
     const o = doc.model.laps[i];
@@ -221,7 +252,7 @@ function buildRow(lap, i) {
   const expand = document.createElement('button');
   expand.type = 'button';
   expand.className = 'icon-btn';
-  expand.title = 'Ver piscinas registradas pelo relógio';
+  expand.title = T.showLengths;
   expand.textContent = '▾';
   expand.setAttribute('aria-expanded', 'false');
   const detail = document.createElement('tr');
@@ -247,11 +278,11 @@ function unitSpan() {
 }
 
 function lengthChips(lap) {
-  if (!lap.lengths.length) return '<span class="muted">Sem piscinas registradas.</span>';
+  if (!lap.lengths.length) return `<span class="muted">${T.noLengths}</span>`;
   const chips = lap.lengths.map((l, j) => (l.active
-    ? `<span class="chip"><b>${j + 1}</b> ${fmtTime(l.timer)} · ${l.strokes} br.</span>`
-    : `<span class="chip idle">parado ${fmtTime(l.timer)}</span>`)).join('');
-  return `<div class="muted small" style="margin-bottom:6px">Piscinas como o relógio gravou (original):</div><div class="chips">${chips}</div>`;
+    ? `<span class="chip"><b>${j + 1}</b> ${fmtTime(l.timer)} · ${l.strokes} ${T.strokesShort}</span>`
+    : `<span class="chip idle">${T.idle} ${fmtTime(l.timer)}</span>`)).join('');
+  return `<div class="muted small" style="margin-bottom:6px">${T.lengthsAsRecorded}</div><div class="chips">${chips}</div>`;
 }
 
 function updateAll() {
@@ -259,7 +290,7 @@ function updateAll() {
   updateTotals();
   const any = doc.state.some((_, i) => lapChanged(i));
   els.reset.disabled = !any;
-  els.result.hidden = true;
+  hideResult();
 }
 
 function updateRow(i) {
@@ -320,14 +351,14 @@ function updateTotals() {
       <div class="value">${now}${changed ? `<span class="was">${was}</span>` : ''}</div></div>`;
   };
   els.summary.innerHTML = [
-    card('Distância', fmtDist(cur.dist), fmtDist(orig.dist)),
-    card('Tempo total', fmtTime(cur.timer, 0), fmtTime(orig.timer, 0)),
-    card('Tempo nadando', fmtTime(cur.swim, 0), fmtTime(orig.swim, 0)),
-    card(`Ritmo médio /100${unitName()}`, fmtPace(cur.swim, cur.dist), fmtPace(orig.swim, orig.dist)),
-    pool ? card('Piscinas', String(lengthsCur), String(lengthsOrig)) : '',
+    card(T.cardDistance, fmtDist(cur.dist), fmtDist(orig.dist)),
+    card(T.cardTotalTime, fmtTime(cur.timer, 0), fmtTime(orig.timer, 0)),
+    card(T.cardSwimTime, fmtTime(cur.swim, 0), fmtTime(orig.swim, 0)),
+    card(T.cardPace(unitName()), fmtPace(cur.swim, cur.dist), fmtPace(orig.swim, orig.dist)),
+    pool ? card(T.cardLengths, String(lengthsCur), String(lengthsOrig)) : '',
   ].join('');
 
-  els.totals.innerHTML = `<tr><td></td><td>Total</td><td class="num">${fmtDist(cur.dist)}</td>
+  els.totals.innerHTML = `<tr><td></td><td>${T.total}</td><td class="num">${fmtDist(cur.dist)}</td>
     <td class="num hide-sm">${pool ? lengthsCur : '—'}</td><td class="num">${fmtTime(cur.timer)}</td>
     <td class="num">${fmtPace(cur.swim, cur.dist)}</td><td class="num hide-sm"></td><td class="num hide-sm"></td><td></td></tr>`;
 }
@@ -344,7 +375,7 @@ function setTimer(i, newTimer) {
     const rest = doc.state[i + 1];
     const wanted = rest.timer - delta;
     rest.timer = Math.max(0, wanted);
-    if (wanted < 0) notice = `O descanso após a série ${i + 1} foi zerado; os ${fmtTime(-wanted)} restantes empurram o resto do treino.`;
+    if (wanted < 0) notice = T.restZeroed(i + 1, fmtTime(-wanted));
   }
 }
 
@@ -352,7 +383,7 @@ function onTime(i, input) {
   const v = parseTime(input.value);
   if (v == null || v < 0 || v > 24 * 3600) {
     input.classList.add('invalid');
-    input.title = 'Use o formato m:ss ou m:ss.d (ex.: 3:42.5)';
+    input.title = T.timeFormat;
     return;
   }
   input.title = '';
@@ -396,6 +427,12 @@ function flash(msg, kind = 'ok') {
   els.result.className = `alert ${kind}`;
   els.result.textContent = msg;
   els.result.hidden = false;
+  els.upload.hidden = true;
+}
+
+function hideResult() {
+  els.result.hidden = true;
+  els.upload.hidden = true;
 }
 
 // ---------------------------------------------------------------- exportar
@@ -419,31 +456,28 @@ els.exportBtn.addEventListener('click', () => {
     // Confere se o arquivo gerado é legível e bate com o esperado.
     const check = analyze(bytes);
     const expectDist = doc.state.reduce((a, s) => a + s.distance, 0);
-    if (Math.abs(check.totalDistance - expectDist) > 1) throw new Error('verificação da distância total falhou');
+    if (Math.abs(check.totalDistance - expectDist) > 1) throw new Error(T.checkFailed);
 
     const base = doc.name.replace(/\.fit$/i, '');
     const blob = new Blob([bytes], { type: 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${base}_corrigido.fit`;
+    a.download = `${base}${T.fileSuffix}.fit`;
     document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 5000);
 
     const even = report.filter((r) => r.lengthMode === 'even').map((r) => r.index + 1);
-    const n = report.length;
-    let msg = n
-      ? `Arquivo gerado com ${n} série${n > 1 ? 's' : ''} corrigida${n > 1 ? 's' : ''}: ${fmtDist(check.totalDistance)} em ${fmtTime(check.totalTimer, 0)}.`
-      : 'Nenhuma alteração feita — o arquivo baixado é idêntico ao original.';
-    if (even.length) {
-      const which = even.length > 1 ? `Nas séries ${even.join(', ')}` : `Na série ${even[0]}`;
-      msg += ` ${which}, o tempo e as braçadas foram distribuídos igualmente entre as piscinas.`;
-    }
+    // Conta as séries de nado alteradas (descansos só compensados não contam).
+    const n = report.filter((r) => !doc.model.laps[r.index].isRest).length || report.length;
+    let msg = n ? T.exported(n, fmtDist(check.totalDistance), fmtTime(check.totalTimer, 0)) : T.exportedNoChange;
+    if (even.length) msg += ` ${T.evenSpread(even)}`;
     flash(msg, 'ok');
+    els.upload.hidden = false;
   } catch (err) {
     console.error(err);
-    flash(`Erro ao gerar o arquivo: ${err.message}`, 'error');
+    flash(T.exportError(errorText(T, err)), 'error');
   }
 });

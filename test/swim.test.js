@@ -205,3 +205,10 @@ test('extrai .fit de dentro de um .zip', async () => {
   assert.equal(n, 'atividade_ACTIVITY.fit');
   assert.deepEqual(Buffer.from(bytes), Buffer.from(fit));
 });
+
+test('erros trazem código para tradução', async () => {
+  assert.throws(() => parseFit(new TextEncoder().encode('isto não é um arquivo fit')), { code: 'not_fit' });
+  const fit = makeSwimFit();
+  assert.throws(() => parseFit(fit.slice(0, fit.length - 50)), { code: 'truncated' });
+  await assert.rejects(extractFitFromZip(new Uint8Array([0x50, 0x4b, 3, 4, 0, 0, 0, 0])), { code: 'zip_invalid' });
+});
